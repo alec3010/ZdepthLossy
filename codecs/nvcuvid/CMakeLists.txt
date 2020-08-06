@@ -34,27 +34,27 @@ find_library(CUDART_STATIC_LIB
     NAMES
         cudart_static
     HINTS
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+        "/usr/local/cuda-11.0/lib64}/"
     NO_CMAKE_SYSTEM_PATH
 )
 find_library(CUDA_LIB
     NAMES
         cuda
     HINTS
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+        "/usr/local/cuda-11.0/lib64/"
     NO_CMAKE_SYSTEM_PATH
 )
 find_library(NVJPEG_LIB
     NAMES
         nvjpeg
     HINTS
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+        "/usr/local/cuda-11.0/lib64/"
     NO_CMAKE_SYSTEM_PATH
 )
 
 find_path(CUDA_INCLUDE_DIR cuda.h
     HINTS
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/include"
+        "/usr/local/cuda-11.0/include"
     REQUIRED
 )
 
