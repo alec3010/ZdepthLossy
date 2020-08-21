@@ -7,7 +7,7 @@ project(nvcuvid LANGUAGES CXX C)
 # CUDA
 find_package(CUDA REQUIRED)
 
-<<<<<<< HEAD
+
 # NVIDIA Encoder Library
 set(NVCUVID_LIB "${CMAKE_CURRENT_LIST_DIR}/vendored/linux/stubs/x86_64/libnvcuvid.so")
 
