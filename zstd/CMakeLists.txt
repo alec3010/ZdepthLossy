@@ -19,8 +19,9 @@ include_directories(include src)
 ################################################################################
 # Targets
 
-add_library(zstd3 ${ZSTD_SOURCE_FILES})
-target_include_directories(zstd3 PUBLIC
+<<<<<<< HEAD
+add_library(zstd ${ZSTD_SOURCE_FILES})
+target_include_directories(zstd PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include>"
 )
