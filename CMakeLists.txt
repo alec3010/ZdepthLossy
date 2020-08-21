@@ -68,7 +68,7 @@ add_library(zdepth STATIC ${SOURCE_FILES})
 add_library(zdepth::zdepth ALIAS zdepth)
 
 target_link_libraries(zdepth PUBLIC
-    zstd
+    libzstd_shared
     codecs
 )
 
@@ -79,8 +79,8 @@ target_include_directories(zdepth PUBLIC
 
 # zdepth test application
 
-add_executable(zdepth_test tests/zdepth_test.cpp)
-target_link_libraries(zdepth_test PRIVATE zdepth)
+#add_executable(zdepth_test tests/zdepth_test.cpp)
+#target_link_libraries(zdepth_test PRIVATE zdepth)
 
 
 ################################################################################
@@ -91,19 +91,19 @@ install(FILES README.md DESTINATION ".")
 install(FILES ${INCLUDE_FILES} DESTINATION include)
 
 # Disable the rest of this because it does not seem to work on Linux
-return()
+#return()
 
-install(
-    TARGETS
-        zdepth
-        zstd
-    EXPORT
-        zdepth-targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+#install(
+#    TARGETS
+#        zdepth
+#        zstd
+#    EXPORT
+#        zdepth-targets
+#    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#)
 
-install(FILES cmake/zdepth-config.cmake DESTINATION cmake)
-install(FILES cmake/zdepth-config-version.cmake DESTINATION cmake)
-install(EXPORT zdepth-targets DESTINATION cmake)
-install(FILES "$<TARGET_FILE:zdepth>" DESTINATION lib)
+#install(FILES cmake/zdepth-config.cmake DESTINATION cmake)
+#install(FILES cmake/zdepth-config-version.cmake DESTINATION cmake)
+#install(EXPORT zdepth-targets DESTINATION cmake)
+#install(FILES "$<TARGET_FILE:zdepth>" DESTINATION lib)
