@@ -14,23 +14,23 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # In debug mode, add -DDEBUG
-add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+#add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-else()
-    # Warnings
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+#if(MSVC)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+#else()
+#    # Warnings
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 
-    # Remove Asio warning
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+#    # Remove Asio warning
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+#
+#    # Static library: -fPIC
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
-    # Static library: -fPIC
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -march=native -fstack-protector")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
-endif()
+ #   set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -march=native -fstack-protector")
+ #   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+#endif()
 
 
 ################################################################################
