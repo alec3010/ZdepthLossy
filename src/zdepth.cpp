@@ -293,6 +293,9 @@ void DepthCompressor::Compress(
     std::vector<uint8_t>& compressed,
     bool keyframe)
 {
+    if (FrameCount == 0) {
+        keyframe = true;
+    }
     DepthHeader header;
     header.Magic = kDepthFormatMagic;
     header.Flags = 0;
@@ -307,9 +310,7 @@ void DepthCompressor::Compress(
     const int n = params.Width * params.Height;
 
     // Enforce keyframe if we have not compressed anything yet
-    if (FrameCount == 0) {
-        keyframe = true;
-    }
+    
     header.FrameNumber = static_cast<uint16_t>( FrameCount );
     ++FrameCount;
 
