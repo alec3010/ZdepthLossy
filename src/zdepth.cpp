@@ -293,9 +293,11 @@ void DepthCompressor::Compress(
     std::vector<uint8_t>& compressed,
     bool keyframe)
 {
+    // Enforce keyframe if we have not compressed anything yet
     if (FrameCount == 0) {
         keyframe = true;
     }
+
     DepthHeader header;
     header.Magic = kDepthFormatMagic;
     header.Flags = 0;
@@ -308,11 +310,11 @@ void DepthCompressor::Compress(
     header.Width = static_cast<uint16_t>( params.Width );
     header.Height = static_cast<uint16_t>( params.Height );
     const int n = params.Width * params.Height;
-
-    // Enforce keyframe if we have not compressed anything yet
+    
     
     header.FrameNumber = static_cast<uint16_t>( FrameCount );
     ++FrameCount;
+    
 
     QuantizeDepthImage(n, unquantized_depth, QuantizedDepth);
     RescaleImage_11Bits(QuantizedDepth, header.MinimumDepth, header.MaximumDepth);
@@ -371,14 +373,18 @@ DepthResult DepthCompressor::Decompress(
     const unsigned frame_number = header->FrameNumber;
 
     // We can only start decoding on a keyframe because these contain SPS/PPS.
+    
+
     if (!keyframe && FrameCount == 0) {
         return DepthResult::MissingFrame;
+        
     }
     ++FrameCount;
 
 #if 0 // This is okay I guess since we are using intra-frame compression.
     if (!keyframe && frame_number != CompressedFrameNumber + 1) {
         return DepthResult::MissingPFrame;
+        
     }
 #endif
 

@@ -64,8 +64,7 @@
         (1) Quantize depth to 11 bits based on sensor accuracy at range.
             Eliminate data that we do not need to encode.
         (2) Rescale the data so that it ranges full-scale from 0 to 2047.
-        (3) Compress high 3 bits with Zstd.
-        (4) Compress low 8 bits with H.264.
+        (3) Compress high 3 bits withjpgH.264.
 
     High 3-bit compression with Zstd:
 
@@ -85,7 +84,7 @@
             We use the best hardware acceleration available on the platform
             and attempt to run the multiple encoders in parallel.
 
-    Further details are in the DepthCompressor::Filter() code.
+    Further details are in the DepthjpgCompressor::Filter() code.
 */
 
 /*
