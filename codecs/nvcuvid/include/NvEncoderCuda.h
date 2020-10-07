@@ -14,7 +14,7 @@
 #include <vector>
 #include <stdint.h>
 #include <mutex>
-#include "cuda.h"
+#include <cuda.h>
 #include "NvEncoder.h"
 
 

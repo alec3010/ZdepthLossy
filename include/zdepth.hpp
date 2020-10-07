@@ -242,16 +242,11 @@ bool IsKeyFrame(const uint8_t* file_data, unsigned file_bytes);
 */
 
 // Quantize depth from 200..11840 mm to a value from 0..2040
-uint16_t AzureKinectQuantizeDepth(uint16_t depth);
 
 // Reverse quantization back to original depth
 uint16_t AzureKinectDequantizeDepth(uint16_t quantized);
 
 // Quantize depth for a whole image
-void QuantizeDepthImage(
-    int n,
-    const uint16_t* depth,
-    std::vector<uint16_t>& quantized);
 
 // This modifies the depth image in-place
 void DequantizeDepthImage(std::vector<uint16_t>& depth_inout);
@@ -269,10 +264,6 @@ void DequantizeDepthImage(std::vector<uint16_t>& depth_inout);
 // Rescale depth for a whole image to the range of 0..2047.
 // This modifies the data in-place.
 // Returns the minimum and maximum values in the data, needed for the decoder.
-void RescaleImage_11Bits(
-    std::vector<uint16_t>& quantized,
-    uint16_t& min_value,
-    uint16_t& max_value);
 
 // Undo image rescaling.
 // This modifies the data in-place.
@@ -285,9 +276,6 @@ void UndoRescaleImage_11Bits(
 //------------------------------------------------------------------------------
 // Zstd
 
-void ZstdCompress(
-    const std::vector<uint8_t>& uncompressed,
-    std::vector<uint8_t>& compressed);
 
 bool ZstdDecompress(
     const uint8_t* compressed_data,
@@ -302,14 +290,6 @@ bool ZstdDecompress(
 class DepthCompressor
 {
 public:
-    // Compress depth array to buffer
-    // Set keyframe to indicate this frame should not reference the previous one
-    void Compress(
-        const VideoParameters& params,
-        const uint16_t* unquantized_depth,
-        std::vector<uint8_t>& compressed,
-        bool keyframe);
-
     // Decompress buffer to depth array.
     // Resulting depth buffer is row-first, stride=width*2 (no surprises).
     // Returns false if input is invalid
@@ -335,8 +315,6 @@ protected:
 
 
     // Transform the data for compression by Zstd/H.264
-    void Filter(
-        const std::vector<uint16_t>& depth_in);
     void Unfilter(
         int width,
         int height,

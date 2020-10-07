@@ -22,7 +22,7 @@ set(SOURCE_FILES
     src/VideoCodec.cpp
 )
 
-include_directories(include ${CUDA_INCLUDE_DIRS})
+include_directories(include ${CUDA_INCLUDE_DIR})
 
 
 ################################################################################
@@ -31,7 +31,7 @@ include_directories(include ${CUDA_INCLUDE_DIRS})
 # codecs library
 
 add_library(codecs STATIC ${SOURCE_FILES})
-target_include_directories(codecs PUBLIC include ${CUDA_INCLUDE_DIRS})
+target_include_directories(codecs PUBLIC include ${CUDA_INCLUDE_DIR})
 target_link_libraries(codecs PUBLIC
     nvcuvid
 )

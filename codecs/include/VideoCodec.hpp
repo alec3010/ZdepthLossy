@@ -39,9 +39,9 @@
 
 // Nvidia NVENC/NVDEC uses the attached GPU for efficient encoding via CUDA
 #include <cuda_runtime_api.h>
-#include <NvEncoder.h>
 #include <NvEncoderCuda.h>
 #include <NvDecoder.h>
+#include <NvEncoder.h>
 
 #include <stdint.h>
 #include <memory>

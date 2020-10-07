@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\codecs",
+    "\\codecs\\include",
+    "\\codecs\\nvcuvid",
+    "\\codecs\\nvcuvid\\include"
+  ],
+  "SelectedNode": "\\codecs\\nvcuvid\\CMakeLists.txt",
+  "PreviewInSolutionExplorer": false
+}

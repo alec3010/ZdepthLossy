@@ -1,24 +1,87 @@
 cmake_minimum_required(VERSION 3.5)
-project(nvcuvid LANGUAGES CXX C)
+project(nvcuvid LANGUAGES CXX)
+
+# On Windows this requires CUDA version 10.1.
+# Other platforms are not tested.
+
 
 ################################################################################
 # Dependencies
 
-# CUDA
-find_package(CUDA REQUIRED)
+if (WIN32)
+    set(CMAKE_FIND_LIBRARY_PREFIXES "")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
+else()
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+endif()
 
+# FIXME: Only 64-bit version works
+set(LIB_SELECT "x64")
 
-# NVIDIA Encoder Library
-set(NVCUVID_LIB "${CMAKE_CURRENT_LIST_DIR}/vendored/linux/stubs/x86_64/libnvcuvid.so")
+if (WIN32)
+    set(NVCUVID_LIB "${CMAKE_CURRENT_LIST_DIR}/vendored/${LIB_SELECT}/nvcuvid.lib")
+else()
+    find_library(NVCUVID_LIB
+        NAMES
+            nvcuvid
+        NO_CMAKE_SYSTEM_PATH
+    )
+endif()
 
-# CUDA Driver API
-set(CUDA_LIB "${CUDA_TOOLKIT_ROOT_DIR}/lib64/stubs/libcuda.so")
+# FIXME: Only CUDA v10.1 works
+find_library(CUDART_STATIC_LIB
+    NAMES
+        cudart_static
+    HINTS
+        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+    NO_CMAKE_SYSTEM_PATH
+)
+find_library(CUDA_LIB
+    NAMES
+        cuda
+    HINTS
+        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+    NO_CMAKE_SYSTEM_PATH
+)
+find_library(NVJPEG_LIB
+    NAMES
+        nvcuvid
+    HINTS
+        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/lib/${LIB_SELECT}/"
+    NO_CMAKE_SYSTEM_PATH
+)
 
-# Print out directories 
+find_path(CUDA_INCLUDE_DIR cuda.h
+    HINTS
+        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/include"
+    REQUIRED
+)
+
+if (WIN32)
+    set(CMAKE_FIND_LIBRARY_PREFIXES ".lib")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+else()
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")
+endif()
+
+# nvJPEG needs to be vendored because the CUDA Toolkit does not install it
+# in a predictable location.
+find_library(NVJPEG_DYNLIB
+    NAMES
+        nvjpeg64_10
+    HINTS
+        "${CMAKE_CURRENT_LIST_DIR}/vendored/${LIB_SELECT}"
+    NO_CMAKE_SYSTEM_PATH
+)
+
 message("NVCUVID_LIB: ${NVCUVID_LIB}")
-message("CUDA_LIB: ${CUDA_LIBRARIES}")
-message("CUDA_INCLUDE_DIR: ${CUDA_INCLUDE_DIRS}")
-
+message("CUDART_STATIC_LIB: ${CUDART_STATIC_LIB}")
+message("CUDA_LIB: ${CUDA_LIB}")
+message("NVJPEG_LIB: ${NVJPEG_LIB}")
+message("CUDA_INCLUDE_DIR: ${CUDA_INCLUDE_DIR}")
+message("NVJPEG_DYNLIB: ${NVJPEG_DYNLIB}")
 
 
 ################################################################################
@@ -27,8 +90,14 @@ message("CUDA_INCLUDE_DIR: ${CUDA_INCLUDE_DIRS}")
 set(INCLUDE_FILES
     include/cuviddec.h
     include/nvcuvid.h
+	include/NvEncoderCuda.h
+	include/nvEncodeAPI.h
     include/NvDecoder.h
+    include/NvEncoder.h
+    
+    
 )
+
 set(SOURCE_FILES
     ${INCLUDE_FILES}
     src/NvDecoder.cpp
@@ -36,21 +105,22 @@ set(SOURCE_FILES
     src/NvEncoderCuda.cpp
 )
 
-include_directories(include ${CUDA_INCLUDE_DIRS})
+include_directories(include ${CUDA_INCLUDE_DIR})
 
 
 ################################################################################
 # Targets
 
 # nvcuvid library
-add_library(nvcuvid STATIC ${SOURCE_FILES})
-target_include_directories(nvcuvid PUBLIC include ${CUDA_INCLUDE_DIRS})
 
+add_library(nvcuvid STATIC ${SOURCE_FILES})
+target_include_directories(nvcuvid PUBLIC include ${CUDA_INCLUDE_DIR})
 target_link_libraries(nvcuvid PUBLIC
     ${NVCUVID_LIB}
-    ${CUDA_LIBRARIES}
+    ${CUDART_STATIC_LIB}
     ${CUDA_LIB}
+    #${NVJPEG_LIB}
 )
 
-install(FILES ${INCLUDE_FILES} DESTINATION include)
+install(FILES ${CUVID_INCLUDE_FILES} DESTINATION include)
 install(TARGETS nvcuvid DESTINATION lib)

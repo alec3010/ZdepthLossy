@@ -13,6 +13,27 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# In debug mode, add -DDEBUG
+add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+    # Warnings
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+
+    # Remove Asio warning
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+
+    # Static library: -fPIC
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -march=native -fstack-protector")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+endif()
+
+
+
 ################################################################################
 # Subprojects
 
@@ -44,11 +65,11 @@ include_directories(include)
 
 # zdepth library
 
-add_library(zdepth STATIC ${SOURCE_FILES})
+add_library(zdepth SHARED ${SOURCE_FILES})
 add_library(zdepth::zdepth ALIAS zdepth)
 
 target_link_libraries(zdepth PUBLIC
-    libzstd_shared
+    zstd
     codecs
 )
 
@@ -64,3 +85,22 @@ target_include_directories(zdepth PUBLIC
 install(FILES LICENSE DESTINATION ".")
 install(FILES README.md DESTINATION ".")
 install(FILES ${INCLUDE_FILES} DESTINATION include)
+
+return()
+
+
+# Disable the rest of this because it does not seem to work on Linux
+install(
+    TARGETS
+        zdepth
+        zstd
+    EXPORT
+        zdepth-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(FILES cmake/zdepth-config.cmake DESTINATION cmake)
+install(FILES cmake/zdepth-config-version.cmake DESTINATION cmake)
+install(EXPORT zdepth-targets DESTINATION cmake)
+install(FILES "$<TARGET_FILE:zdepth>" DESTINATION lib)
