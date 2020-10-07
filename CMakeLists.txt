@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 11)
 ################################################################################
 # Build Options
 
+
+
+set(CMAKE_BUILD_DIRECTORY)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -44,11 +47,11 @@ include_directories(include)
 
 # zdepth library
 
-add_library(zdepth STATIC ${SOURCE_FILES})
+add_library(zdepth SHARED ${SOURCE_FILES})
 add_library(zdepth::zdepth ALIAS zdepth)
 
 target_link_libraries(zdepth PUBLIC
-    libzstd_shared
+    zstd
     codecs
 )
 

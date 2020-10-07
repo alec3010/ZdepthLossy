@@ -30,7 +30,7 @@ include_directories(include ${CUDA_INCLUDE_DIRS})
 
 # codecs library
 
-add_library(codecs STATIC ${SOURCE_FILES})
+add_library(codecs SHARED ${SOURCE_FILES})
 target_include_directories(codecs PUBLIC include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(codecs PUBLIC
     nvcuvid

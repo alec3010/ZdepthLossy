@@ -178,21 +178,7 @@ struct DepthHeader
 
 // No error codes are unrecoverable.  To recover, simply keep passing frames
 // into the decoder until decoding succeeds.
-enum class DepthResult
-{
-    Success,
 
-    // File format is invalid: Possibly packetloss?
-    FileTruncated,
-    WrongFormat,
-    Corrupted,
-
-    // This is a special error code that means that the frame could not be
-    // decoded because it references other frames that have not been received.
-    MissingFrame,
-};
-
-const char* DepthResultString(DepthResult result);
 
 
 //------------------------------------------------------------------------------
@@ -244,8 +230,6 @@ bool IsKeyFrame(const uint8_t* file_data, unsigned file_bytes);
 // Quantize depth from 200..11840 mm to a value from 0..2040
 uint16_t AzureKinectQuantizeDepth(uint16_t depth);
 
-// Reverse quantization back to original depth
-uint16_t AzureKinectDequantizeDepth(uint16_t quantized);
 
 // Quantize depth for a whole image
 void QuantizeDepthImage(
@@ -254,7 +238,6 @@ void QuantizeDepthImage(
     std::vector<uint16_t>& quantized);
 
 // This modifies the depth image in-place
-void DequantizeDepthImage(std::vector<uint16_t>& depth_inout);
 
 
 //------------------------------------------------------------------------------
@@ -276,10 +259,6 @@ void RescaleImage_11Bits(
 
 // Undo image rescaling.
 // This modifies the data in-place.
-void UndoRescaleImage_11Bits(
-    uint16_t min_value,
-    uint16_t max_value,
-    std::vector<uint16_t>& quantized);
 
 
 //------------------------------------------------------------------------------
@@ -289,11 +268,6 @@ void ZstdCompress(
     const std::vector<uint8_t>& uncompressed,
     std::vector<uint8_t>& compressed);
 
-bool ZstdDecompress(
-    const uint8_t* compressed_data,
-    int compressed_bytes,
-    int uncompressed_bytes,
-    std::vector<uint8_t>& uncompressed);
 
 
 //------------------------------------------------------------------------------
@@ -313,11 +287,6 @@ public:
     // Decompress buffer to depth array.
     // Resulting depth buffer is row-first, stride=width*2 (no surprises).
     // Returns false if input is invalid
-    DepthResult Decompress(
-        const std::vector<uint8_t>& compressed,
-        int& width,
-        int& height,
-        std::vector<uint16_t>& depth_out);
 
 protected:
     // Depth values quantized
@@ -337,10 +306,7 @@ protected:
     // Transform the data for compression by Zstd/H.264
     void Filter(
         const std::vector<uint16_t>& depth_in);
-    void Unfilter(
-        int width,
-        int height,
-        std::vector<uint16_t>& depth_out);
+
 };
 
 

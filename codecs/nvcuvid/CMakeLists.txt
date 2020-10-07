@@ -43,7 +43,7 @@ include_directories(include ${CUDA_INCLUDE_DIRS})
 # Targets
 
 # nvcuvid library
-add_library(nvcuvid STATIC ${SOURCE_FILES})
+add_library(nvcuvid SHARED ${SOURCE_FILES})
 target_include_directories(nvcuvid PUBLIC include ${CUDA_INCLUDE_DIRS})
 
 target_link_libraries(nvcuvid PUBLIC

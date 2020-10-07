@@ -19,20 +19,6 @@ static const int kBlockSize = 8;
 // Zstd compression level
 static const int kZstdLevel = 1;
 
-const char* DepthResultString(DepthResult result)
-{
-    switch (result)
-    {
-    case DepthResult::Success: return "Success";
-    case DepthResult::FileTruncated: return "FileTruncated";
-    case DepthResult::WrongFormat: return "WrongFormat";
-    case DepthResult::Corrupted: return "Corrupted";
-    case DepthResult::MissingFrame: return "MissingFrame";
-    default: break;
-    }
-    return "Unknown";
-}
-
 
 //------------------------------------------------------------------------------
 // Tools
@@ -83,28 +69,6 @@ uint16_t AzureKinectQuantizeDepth(uint16_t depth)
     return 0; // Too far
 }
 
-uint16_t AzureKinectDequantizeDepth(uint16_t quantized)
-{
-    if (quantized == 0) {
-        return 0;
-    }
-    if (quantized < 550) {
-        return quantized + 200;
-    }
-    if (quantized < 925) {
-        return 750 + (quantized - 550) * 2;
-    }
-    if (quantized < 1300) {
-        return 1500 + (quantized - 925) * 4;
-    }
-    if (quantized < 1675) {
-        return 3000 + (quantized - 1300) * 8;
-    }
-    if (quantized < 2040) {
-        return 6000 + (quantized - 1675) * 16;
-    }
-    return 0; // Invalid value
-}
 
 void QuantizeDepthImage(
     int n,
@@ -119,15 +83,7 @@ void QuantizeDepthImage(
     }
 }
 
-void DequantizeDepthImage(std::vector<uint16_t>& depth_inout)
-{
-    const int n = static_cast<int>( depth_inout.size() );
-    uint16_t* depth = depth_inout.data();
 
-    for (int i = 0; i < n; ++i) {
-        depth[i] = AzureKinectDequantizeDepth(depth[i]);
-    }
-}
 
 
 //------------------------------------------------------------------------------
@@ -350,93 +306,6 @@ void DepthCompressor::Compress(
     memcpy(copy_dest, LowOut.data(), LowOut.size());
 }
 
-DepthResult DepthCompressor::Decompress(
-    const std::vector<uint8_t>& compressed,
-    int& width,
-    int& height,
-    std::vector<uint16_t>& depth_out)
-{
-    if (compressed.size() < kDepthHeaderBytes) {
-        return DepthResult::FileTruncated;
-    }
-    const uint8_t* src = compressed.data();
-
-    const DepthHeader* header = reinterpret_cast<const DepthHeader*>( src );
-    if (header->Magic != kDepthFormatMagic) {
-        return DepthResult::WrongFormat;
-    }
-    const bool keyframe = (header->Flags & DepthFlags_Keyframe) != 0;
-    VideoType video_codec_type = VideoType::H264;
-    if ((header->Flags & DepthFlags_HEVC) != 0) {
-        video_codec_type = VideoType::H265;
-    }
-    const unsigned frame_number = header->FrameNumber;
-
-    // We can only start decoding on a keyframe because these contain SPS/PPS.
-    
-
-    if (!keyframe && FrameCount == 0) {
-        return DepthResult::MissingFrame;
-        
-    }
-    ++FrameCount;
-
-#if 0 // This is okay I guess since we are using intra-frame compression.
-    if (!keyframe && frame_number != CompressedFrameNumber + 1) {
-        return DepthResult::MissingPFrame;
-        
-    }
-#endif
-
-    width = header->Width;
-    height = header->Height;
-    if (width < 1 || width > 4096 || height < 1 || height > 4096) {
-        return DepthResult::Corrupted;
-    }
-
-    // Read header
-    unsigned total_bytes = kDepthHeaderBytes + header->HighCompressedBytes + header->LowCompressedBytes;
-    if (header->HighUncompressedBytes < 2) {
-        return DepthResult::Corrupted;
-    }
-    if (compressed.size() != total_bytes) {
-        return DepthResult::FileTruncated;
-    }
-
-    src += kDepthHeaderBytes;
-
-    // Compress high bits
-    bool success = ZstdDecompress(
-        src,
-        header->HighCompressedBytes,
-        header->HighUncompressedBytes,
-        High);
-    if (!success) {
-        return DepthResult::Corrupted;
-    }
-
-    src += header->HighCompressedBytes;
-
-    success = Codec.Decode(
-        width,
-        height,
-        video_codec_type,
-        src,
-        header->LowCompressedBytes,
-        Low);
-    if (!success) {
-        return DepthResult::Corrupted;
-    }
-
-    src += header->LowCompressedBytes;
-
-    Unfilter(width, height, depth_out);
-    UndoRescaleImage_11Bits(header->MinimumDepth, header->MaximumDepth, depth_out);
-    DequantizeDepthImage(depth_out);
-
-    return DepthResult::Success;
-}
-
 
 //------------------------------------------------------------------------------
 // DepthCompressor : Filtering
@@ -490,60 +359,6 @@ void DepthCompressor::Filter(
         High[i / 2] = static_cast<uint8_t>( high_0 | (high_1 << 4) );
         Low[i] = low_0;
         Low[i + 1] = low_1;
-    }
-}
-
-void DepthCompressor::Unfilter(
-    int width,
-    int height,
-    std::vector<uint16_t>& depth_out)
-{
-    const int n = width * height;
-    depth_out.resize(n);
-    uint16_t* depth = depth_out.data();
-    const uint8_t* low_data = Low.data();
-    const uint8_t* high_data = High.data();
-
-    for (int i = 0; i < n; i += 2) {
-        const uint8_t high = high_data[i / 2];
-        uint8_t low_0 = low_data[i];
-        uint8_t low_1 = low_data[i + 1];
-        unsigned high_0 = high & 15;
-        unsigned high_1 = high >> 4;
-
-        if (high_0 == 0) {
-            depth[i] = 0;
-        } else {
-            high_0--;
-            if (high_0 & 1) {
-                low_0 = 255 - low_0;
-            }
-            uint16_t x = static_cast<uint16_t>(low_0 | (high_0 << 8));
-
-            // This value is expected to always be at least 1
-            if (x == 0) {
-                x = 1;
-            }
-
-            depth[i] = x;
-        }
-
-        if (high_1 == 0) {
-            depth[i + 1] = 0;
-        } else {
-            high_1--;
-            if (high_1 & 1) {
-                low_1 = 255 - low_1;
-            }
-            uint16_t y = static_cast<uint16_t>(low_1 | (high_1 << 8));
-
-            // This value is expected to always be at least 1
-            if (y == 0) {
-                y = 1;
-            }
-
-            depth[i + 1] = y;
-        }
     }
 }
 
