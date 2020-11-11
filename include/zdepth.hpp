@@ -104,10 +104,6 @@
     Uses Zstd: https://github.com/facebook/zstd
 */
 
-#pragma once
-
-#include <stdint.h>
-#include <vector>
 
 // Compiler-specific force inline keyword
 #if defined(_MSC_VER)
@@ -122,7 +118,14 @@
     #define DEPTH_ALIGNED_ACCESSES
 #endif // ANDROID
 
+#pragma once
+
+#include <stdint.h>
+#include <vector>
+
 #include "VideoCodec.hpp"
+
+extern "C"{
 
 namespace zdepth {
 
@@ -181,7 +184,6 @@ struct DepthHeader
 enum class DepthResult
 {
     Success,
-
     // File format is invalid: Possibly packetloss?
     FileTruncated,
     WrongFormat,
@@ -189,7 +191,7 @@ enum class DepthResult
 
     // This is a special error code that means that the frame could not be
     // decoded because it references other frames that have not been received.
-    MissingFrame,
+    MissingFrame
 };
 
 const char* DepthResultString(DepthResult result);
@@ -275,13 +277,12 @@ void UndoRescaleImage_11Bits(
 
 //------------------------------------------------------------------------------
 // Zstd
-
-
 bool ZstdDecompress(
     const uint8_t* compressed_data,
     int compressed_bytes,
     int uncompressed_bytes,
     std::vector<uint8_t>& uncompressed);
+
 
 
 //------------------------------------------------------------------------------
@@ -290,6 +291,8 @@ bool ZstdDecompress(
 class DepthCompressor
 {
 public:
+    //DepthCompressor();
+    //~DepthCompressor();
     // Decompress buffer to depth array.
     // Resulting depth buffer is row-first, stride=width*2 (no surprises).
     // Returns false if input is invalid
@@ -297,12 +300,13 @@ public:
         const std::vector<uint8_t>& compressed,
         int& width,
         int& height,
-        std::vector<uint16_t>& depth_out);
-
+        std::vector<uint16_t>& depth_out
+		);
+	uint64_t FrameCount = 0;
 protected:
     // Depth values quantized
     std::vector<uint16_t> QuantizedDepth;
-    uint64_t FrameCount = 0;
+    //uint64_t FrameCount = 0;
 
     std::vector<uint8_t> High;
     std::vector<uint8_t> Low;
@@ -314,7 +318,7 @@ protected:
     VideoCodec Codec;
 
 
-    // Transform the data for compression by Zstd/H.264
+    // Transform the data for decompression by Zstd/H.264
     void Unfilter(
         int width,
         int height,
@@ -322,4 +326,8 @@ protected:
 };
 
 
-} // namespace zdepth
+}; // namespace zdepth
+
+
+} // extern "C"
+

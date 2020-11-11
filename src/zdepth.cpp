@@ -7,6 +7,9 @@
 #include <zstd.h> // Zstd
 #include <string.h> // memcpy
 
+//extern "C"
+//{
+
 namespace zdepth {
 
 
@@ -158,6 +161,8 @@ bool ZstdDecompress(
 }
 
 
+
+
 //------------------------------------------------------------------------------
 // DepthCompressor
 DepthResult DepthCompressor::Decompress(
@@ -166,18 +171,21 @@ DepthResult DepthCompressor::Decompress(
     int& height,
     std::vector<uint16_t>& depth_out)
 {
-    if (compressed.size() < kDepthHeaderBytes) {
+    if (compressed.size() < kDepthHeaderBytes)
+	{
         return DepthResult::FileTruncated;
     }
     const uint8_t* src = compressed.data();
 
     const DepthHeader* header = reinterpret_cast<const DepthHeader*>( src );
-    if (header->Magic != kDepthFormatMagic) {
+    if (header->Magic != kDepthFormatMagic) 
+	{
         return DepthResult::WrongFormat;
     }
     const bool keyframe = (header->Flags & DepthFlags_Keyframe) != 0;
     VideoType video_codec_type = VideoType::H264;
-    if ((header->Flags & DepthFlags_HEVC) != 0) {
+    if ((header->Flags & DepthFlags_HEVC) != 0) 
+	{
         video_codec_type = VideoType::H265;
     }
     const unsigned frame_number = header->FrameNumber;
@@ -185,7 +193,7 @@ DepthResult DepthCompressor::Decompress(
     // We can only start decoding on a keyframe because these contain SPS/PPS.
     
 
-    if (!keyframe && FrameCount == 0) {
+    if (!keyframe && FrameCount == 0) { 
         return DepthResult::MissingFrame;
         
     }
@@ -193,7 +201,7 @@ DepthResult DepthCompressor::Decompress(
 
 #if 0 // This is okay I guess since we are using intra-frame compression.
     if (!keyframe && frame_number != CompressedFrameNumber + 1) {
-        return DepthResult::MissingPFrame;
+		return DepthResult::MissingPFrame;
         
     }
 #endif
@@ -201,16 +209,16 @@ DepthResult DepthCompressor::Decompress(
     width = header->Width;
     height = header->Height;
     if (width < 1 || width > 4096 || height < 1 || height > 4096) {
-        return DepthResult::Corrupted;
+		return DepthResult::Corrupted;
     }
 
     // Read header
     unsigned total_bytes = kDepthHeaderBytes + header->HighCompressedBytes + header->LowCompressedBytes;
     if (header->HighUncompressedBytes < 2) {
-        return DepthResult::Corrupted;
-    }
+		return DepthResult::Corrupted;
+	}
     if (compressed.size() != total_bytes) {
-        return DepthResult::FileTruncated;
+		return DepthResult::FileTruncated;
     }
 
     src += kDepthHeaderBytes;
@@ -222,7 +230,7 @@ DepthResult DepthCompressor::Decompress(
         header->HighUncompressedBytes,
         High);
     if (!success) {
-        return DepthResult::Corrupted;
+		return DepthResult::Corrupted;
     }
 
     src += header->HighCompressedBytes;
@@ -235,7 +243,7 @@ DepthResult DepthCompressor::Decompress(
         header->LowCompressedBytes,
         Low);
     if (!success) {
-        return DepthResult::Corrupted;
+		return DepthResult::Corrupted;
     }
 
     src += header->LowCompressedBytes;
@@ -244,12 +252,12 @@ DepthResult DepthCompressor::Decompress(
     UndoRescaleImage_11Bits(header->MinimumDepth, header->MaximumDepth, depth_out);
     DequantizeDepthImage(depth_out);
 
-    return DepthResult::Success;
+	return DepthResult::Success;
 }
 
 
 //------------------------------------------------------------------------------
-// DepthCompressor : Filtering
+// DepthCompressor : Unfiltering
 
 void DepthCompressor::Unfilter(
     int width,
@@ -307,3 +315,5 @@ void DepthCompressor::Unfilter(
 
 
 } // namespace zdepth
+
+//} //extern "C"

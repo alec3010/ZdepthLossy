@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(zdepth LANGUAGES CXX)
 include("cmake/zdepth-config-version.cmake")
+include(GenerateExportHeader)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 
 
 ################################################################################
@@ -50,11 +52,14 @@ endif()
 
 set(INCLUDE_FILES
     include/zdepth.hpp
+    include/zdepthcaller.hpp
 )
 
 set(SOURCE_FILES
     ${INCLUDE_FILES}
     src/zdepth.cpp
+    src/zdepthcaller.cpp
+
 )
 
 include_directories(include)
@@ -66,6 +71,11 @@ include_directories(include)
 # zdepth library
 
 add_library(zdepth SHARED ${SOURCE_FILES})
+generate_export_header(zdepth 
+                BASE_NAME zdepth
+                EXPORT_MACRO_NAME zdepth_EXPORT
+                EXPORT_FILE_NAME zdepth_Export.h 
+                STATIC_DEFINE zdepth_BUILT_AS_STATIC)
 add_library(zdepth::zdepth ALIAS zdepth)
 
 target_link_libraries(zdepth PUBLIC

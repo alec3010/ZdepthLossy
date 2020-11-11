@@ -1,4 +1,6 @@
-# ZdepthLossy
+# ZdepthLossy - Only Decompression
+
+This Repository contains the code for decompression on windows only
 
 Lossy depth buffer compression designed and tested for Azure Kinect DK.
 Based on the Facebook Zstd library and H.264/HEVC for compression.
